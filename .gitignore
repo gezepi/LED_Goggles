@@ -36,6 +36,7 @@
 *.disasm
 *.inx
 *.d
+*.txt
 
 # LaTeX
 *.aux
