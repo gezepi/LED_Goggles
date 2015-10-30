@@ -37,6 +37,7 @@
 *.inx
 *.d
 *.txt
+*.mk
 
 # LaTeX
 *.aux
