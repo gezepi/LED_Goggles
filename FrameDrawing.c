@@ -2,6 +2,7 @@
 #include "FrameDrawing.h"
 #include <math.h>
 #include "constants.h"
+#include <stdlib.h>
 
 /*------------------------------------Macros----------------------------------*/
 #define abs(x)  (x<0)?-1*x:x
@@ -29,16 +30,7 @@ void __attribute__((__interrupt__,__auto_psv__)) _T3Interrupt(void)
     BLANK = 1;
 }
 
-/*--------------------------------Private Functions---------------------------*/
-
-int SPI_Blocking(int d){
-    XLAT = 0;
-    SPI1BUF = d;
-    //while(IFS0bits.SPI1IF == 0);
-    waitSPI();
-    XLAT = 1;
-    return SPI1BUF;
-}
+/*-----------------------------------GS Functions-----------------------------*/
 
 void sendGSData(){
     swapGSbytes();
@@ -77,11 +69,36 @@ void setGS(GSdata* gs, int chan, int d){
     }
 }
 
+void swapGSbytes(void){
+    int i;
+    unsigned char temp;
+    for(i=0; i<24; i+=2)
+    {
+        //Left
+        temp = gsL.data8[i];
+        gsL.data8[i] = gsL.data8[i+1];
+        gsL.data8[i+1] = temp;
+        //Right
+        temp = gsR.data8[i];
+        gsR.data8[i] = gsR.data8[i+1];
+        gsR.data8[i+1] = temp;
+    }
+}
+
+/*--------------------------------Drawing Functions---------------------------*/
 void setAll(int value){
     int i=0;
-    for(i=0; i < 12; i++){
-        gsR.data16[i] = value;
-        gsL.data16[i] = value;
+    for(i=0; i < 16; i++){
+        setGS(&gsR, i, value);
+        setGS(&gsL, i, value);
+    }
+}
+
+void incAll(int inc){
+    int i=0;
+    for(i=0; i < 16; i++){
+        incGS(&gsR, i, inc);
+        incGS(&gsL, i, inc);
     }
 }
 
@@ -128,7 +145,15 @@ void lobed1(int angle){
 }
 
 void randFade(){
-    
+    incAll(-1);
+    int led = rand() & 0x1F;
+    if(led){
+        setGS(&gsR, (led>>1), maxIntensity);
+    }
+    led = rand() & 0x1F;
+    if(led){
+        setGS(&gsL, (led>>1), maxIntensity);
+    }
 }
 
 void pulseAll(int a){
@@ -142,20 +167,14 @@ void singleRing(int a){
     setGS(&gsL, 15-led, maxIntensity);
 }
 
-void swapGSbytes(void){
-    int i;
-    unsigned char temp;
-    for(i=0; i<24; i+=2)
-    {
-        //Left
-        temp = gsL.data8[i];
-        gsL.data8[i] = gsL.data8[i+1];
-        gsL.data8[i+1] = temp;
-        //Right
-        temp = gsR.data8[i];
-        gsR.data8[i] = gsR.data8[i+1];
-        gsR.data8[i+1] = temp;
-    }
+/*--------------------------------Private Functions---------------------------*/
+int SPI_Blocking(int d){
+    XLAT = 0;
+    SPI1BUF = d;
+    //while(IFS0bits.SPI1IF == 0);
+    waitSPI();
+    XLAT = 1;
+    return SPI1BUF;
 }
 
 void nextFrame(void){
