@@ -32,13 +32,15 @@ typedef union{
     unsigned char data8[24];
 } GSdata;
 
-extern GSdata GS;
+extern GSdata gsL;
+extern GSdata gsR;
 extern int dropOff;    //How quickly the values drop from full strength
                 //  raises a value that's less than one to a power (.5^2=.25)
 
 /*-------------------------------Functions------------------------------------*/
 void swapGSbytes(void);
 void setBPM(int bpm);
+void incBPM(int bpm);
 void setMode(modes m);
 void init(void);
 void nextFrame(void);
