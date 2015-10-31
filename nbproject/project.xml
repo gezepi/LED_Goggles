@@ -3,15 +3,15 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>TLC5940</name>
-            <creation-uuid>e37f022c-f49d-4ecf-af48-c815392f74b7</creation-uuid>
+            <name>LED_Goggles</name>
+            <creation-uuid>fe3d7ef5-2dba-4859-bb4c-346ef4db99eb</creation-uuid>
             <make-project-type>0</make-project-type>
-            <c-extensions>c</c-extensions>
+            <c-extensions/>
             <cpp-extensions/>
-            <header-extensions>h</header-extensions>
+            <header-extensions/>
             <asminc-extensions/>
-            <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
+            <sourceEncoding>UTF-8</sourceEncoding>
         </data>
     </configuration>
 </project>

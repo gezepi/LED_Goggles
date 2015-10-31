@@ -43,17 +43,17 @@ void sendGSData(){
     XLAT = 0;
     int i=0;
     for(i=0; i<12; i++){
-        SPI1BUF = GS.data16[i];
+        SPI1BUF = gsL.data16[i];
         waitSPI();
     }
     for(i=0; i<12; i++){
-        SPI1BUF = GS.data16[i];
+        SPI1BUF = gsR.data16[i];
         waitSPI();
     }
     XLAT = 1;
 }
 
-void setGS(int chan, int d){
+void setGS(GSdata* gs, int chan, int d){
     d = abs(d);
     d = 0x0FFF & d; //Save only the lower 12 bits
     //if(d<0x11){d=0x11;}
@@ -61,21 +61,22 @@ void setGS(int chan, int d){
     if(chan & 1){   //Odd
         i = ((chan - 1) / 2) * 3;
         i += 1;
-        GS.data8[i] &= 0xF0;    //Mask MSb to save prev channel's data
-        GS.data8[i] |= ((0x0F00 & d) >> 8);
-        GS.data8[i+1] = (0x00FF & d);
+        gs->data8[i] &= 0xF0;    //Mask MSb to save prev channel's data
+        gs->data8[i] |= ((0x0F00 & d) >> 8);
+        gs->data8[i+1] = (0x00FF & d);
     }else{  //Even
         i = (chan / 2) * 3;
-        GS.data8[i] = ((0x0FF0 & d) >> 4);
-        GS.data8[i+1] &= 0x0F;  //Mask LSb to save next channel's data
-        GS.data8[i+1] |= ((0x000F & d) << 4);
+        gs->data8[i] = ((0x0FF0 & d) >> 4);
+        gs->data8[i+1] &= 0x0F;  //Mask LSb to save next channel's data
+        gs->data8[i+1] |= ((0x000F & d) << 4);
     }
 }
 
 void setAll(int value){
     int i=0;
     for(i=0; i < 12; i++){
-        GS.data16[i] = value;
+        gsR.data16[i] = value;
+        gsL.data16[i] = value;
     }
 }
 
@@ -87,7 +88,8 @@ void lobed(int angle, int k){
     for(i=0; i < 16; i++){
         intensity = cos(((double)i * k *PIover8) - phi);
         intensity = pow(intensity, 6);
-        setGS(i, intensity * 0xFFF);
+        setGS(&gsR, i, intensity * 0xFFF);
+        setGS(&gsL, 15-i, intensity * 0xFFF);
     }
 }
 
@@ -115,7 +117,8 @@ void lobed1(int angle){
         intensity = abs(1 + cos(((double)i * PIover8) - phi));
         intensity /= 2;
         intensity = pow(intensity, 4);
-        setGS(i, intensity * 0xFFF);
+        setGS(&gsR, i, intensity * 0xFFF);
+        setGS(&gsL, 15-i, intensity * 0xFFF);
     }
 }
 
@@ -136,9 +139,14 @@ void swapGSbytes(void){
     unsigned char temp;
     for(i=0; i<24; i+=2)
     {
-        temp = GS.data8[i];
-        GS.data8[i] = GS.data8[i+1];
-        GS.data8[i+1] = temp;
+        //Left
+        temp = gsL.data8[i];
+        gsL.data8[i] = gsL.data8[i+1];
+        gsL.data8[i+1] = temp;
+        //Right
+        temp = gsR.data8[i];
+        gsR.data8[i] = gsR.data8[i+1];
+        gsR.data8[i+1] = temp;
     }
 }
 
@@ -199,6 +207,12 @@ void setBPM(int bpm){
     //set the timer to something that makes sense
     //inc = (maxFrames + 1) / (FPS * bps);
     inc = bps / FPS;
+}
+void incBPM(int bpm){
+    int bps = bpm * 60;
+    //set the timer to something that makes sense
+    //inc = (maxFrames + 1) / (FPS * bps);
+    inc += bps / FPS;
 }
 
 void setMode(modes m){

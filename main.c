@@ -6,7 +6,8 @@
 #include "FrameDrawing.h"
 
 /*---------------------------------Variables----------------------------------*/
-GSdata GS;
+GSdata gsR;
+GSdata gsL;
 int dropOff = 1;
 
 /*---------------------------------Macros-------------------------------------*/
@@ -164,7 +165,7 @@ int main(void)
     
     //allOff();
 
-    setMode(LOBED2);
+    setMode(LOBED1);
     setBPM(120);
     
     init();
@@ -175,7 +176,8 @@ int main(void)
         newCycle = 0;
         nextFrame();
         if(!speedChange){setBPM(60);}
-        else if(speedChange == 512){setBPM(-120);}
+        else if(speedChange > 768){if(speedChange & 1){incBPM(2);}}
+        else if(speedChange > 512){if(speedChange & 1){incBPM(-2);}}
         speedChange++;
         speedChange = speedChange & 0x3FF;//1023
     }
