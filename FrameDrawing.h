@@ -41,6 +41,8 @@ extern int dropOff;    //How quickly the values drop from full strength
 void swapGSbytes(void);
 void setBPM(int bpm);
 void incBPM(int bpm);
+void setMaxI(int i);
+void incMaxI(int i);
 void setMode(modes m);
 void init(void);
 void nextFrame(void);

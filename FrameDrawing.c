@@ -5,6 +5,7 @@
 
 /*------------------------------------Macros----------------------------------*/
 #define abs(x)  (x<0)?-1*x:x
+#define constrain(x, l, h)  ((x)<(l))?(l):(((x)>(h))?(h):x)
 /*---------------------------------Macro Functions----------------------------*/
 #define stopOC()    T2CONbits.TON = 0;
 #define startOC()   TMR3 = 0; T2CONbits.TON = 1;
@@ -13,14 +14,15 @@
 #define waitSPI()   wait10();wait10();wait10();Nop();Nop();Nop();
 
 /*------------------------------------Variables-------------------------------*/
-//dropOff = 1;
 modes cur_mode = LOBED1;
 int angle = 0;
 int inc = 1;
+int maxIntensity = 0xFFF;
 
 /*-----------------------------------Interrupts-------------------------------*/
 void __attribute__((__interrupt__,__auto_psv__)) _T3Interrupt(void)
 {
+    //4096 pulses on GSCLK have occured
     _T3IF = 0;
     //Disable GSCLK
     stopOC();
@@ -53,10 +55,13 @@ void sendGSData(){
     XLAT = 1;
 }
 
+void incGS(GSdata* gs, int chan, int inc){
+    
+}
+
 void setGS(GSdata* gs, int chan, int d){
     d = abs(d);
     d = 0x0FFF & d; //Save only the lower 12 bits
-    //if(d<0x11){d=0x11;}
     int i;
     if(chan & 1){   //Odd
         i = ((chan - 1) / 2) * 3;
@@ -131,7 +136,10 @@ void pulseAll(int a){
 }
 
 void singleRing(int a){
-    
+    int led = 15 * (a / maxFrames);
+    setAll(0);
+    setGS(&gsR, led, maxIntensity);
+    setGS(&gsL, 15-led, maxIntensity);
 }
 
 void swapGSbytes(void){
@@ -208,11 +216,22 @@ void setBPM(int bpm){
     //inc = (maxFrames + 1) / (FPS * bps);
     inc = bps / FPS;
 }
+
 void incBPM(int bpm){
     int bps = bpm * 60;
     //set the timer to something that makes sense
     //inc = (maxFrames + 1) / (FPS * bps);
     inc += bps / FPS;
+}
+
+void setMaxI(int i){
+    i = constrain(i, 0, 0xFFF);
+    maxIntensity = i;
+}
+
+void incMaxI(int i){
+    maxIntensity += i;
+    maxIntensity = constrain(maxIntensity, 0, 0xFFF);
 }
 
 void setMode(modes m){
