@@ -25,6 +25,7 @@ typedef enum {
     RAND_FADE,
     SINGLE_RING,
     PULSE_ALL,
+    ALL_SAME,
 } modes;
 
 typedef union{

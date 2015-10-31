@@ -1,6 +1,6 @@
 #include <p24Fxxxx.h>
 #include <xc.h>
-#include <PPS.h>
+#include "C:\Program Files (x86)\Microchip\xc16\v1.23\support\peripheral_24F\PPS.h"
 #include <math.h>
 #include "constants.h"
 #include "FrameDrawing.h"
@@ -166,7 +166,7 @@ int main(void)
     //allOff();
 
     setMode(LOBED1);
-    setBPM(120);
+    setBPM(60);
     
     init();
     int speedChange = 0;
@@ -175,11 +175,11 @@ int main(void)
         while(!newCycle);
         newCycle = 0;
         nextFrame();
-        if(!speedChange){setBPM(60);}
-        else if(speedChange > 768){if(speedChange & 1){incBPM(2);}}
-        else if(speedChange > 512){if(speedChange & 1){incBPM(-2);}}
-        speedChange++;
-        speedChange = speedChange & 0x3FF;//1023
+//        if(!speedChange){setBPM(60);}
+//        else if(speedChange > 768){if(speedChange & 1){incBPM(2); incMaxI(30);}}
+//        else if(speedChange > 512){if(speedChange & 1){incBPM(-2); incMaxI(-30);}}
+//        speedChange++;
+//        speedChange = speedChange & 0x3FF;//1023
     }
     return 0;
 }

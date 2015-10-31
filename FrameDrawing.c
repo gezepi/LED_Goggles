@@ -16,7 +16,7 @@
 
 /*------------------------------------Variables-------------------------------*/
 modes cur_mode = LOBED1;
-int angle = 0;
+int angle = 1024;
 int inc = 1;
 int maxIntensity = 0xFFF;
 
@@ -31,7 +31,6 @@ void __attribute__((__interrupt__,__auto_psv__)) _T3Interrupt(void)
 }
 
 /*-----------------------------------GS Functions-----------------------------*/
-
 void sendGSData(){
     swapGSbytes();
     XLAT = 0;
@@ -54,6 +53,7 @@ void incGS(GSdata* gs, int chan, int inc){
 void setGS(GSdata* gs, int chan, int d){
     d = abs(d);
     d = 0x0FFF & d; //Save only the lower 12 bits
+    chan = chan & 0xF;
     int i;
     if(chan & 1){   //Odd
         i = ((chan - 1) / 2) * 3;
@@ -146,14 +146,11 @@ void lobed1(int angle){
 
 void randFade(){
     incAll(-1);
-    int led = rand() & 0x1F;
-    if(led){
-        setGS(&gsR, (led>>1), maxIntensity);
-    }
+    int led = rand() % 0xF;
+    led = constrain(led, 0, 15);
+    setGS(&gsR, (led), maxIntensity);
     led = rand() & 0x1F;
-    if(led){
-        setGS(&gsL, (led>>1), maxIntensity);
-    }
+    setGS(&gsL, (led), maxIntensity);
 }
 
 void pulseAll(int a){
@@ -195,6 +192,8 @@ void nextFrame(void){
         singleRing(angle);
     }else if(cur_mode == PULSE_ALL){
         pulseAll(angle);
+    }else if(cur_mode == ALL_SAME){
+        setAll((angle/maxFrames) * maxIntensity);
     }else{
         //nothing
     }
