@@ -6,9 +6,9 @@
             <name>LED_Goggles</name>
             <creation-uuid>fe3d7ef5-2dba-4859-bb4c-346ef4db99eb</creation-uuid>
             <make-project-type>0</make-project-type>
-            <c-extensions/>
+            <c-extensions>c</c-extensions>
             <cpp-extensions/>
-            <header-extensions/>
+            <header-extensions>h</header-extensions>
             <asminc-extensions/>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>

@@ -93,8 +93,8 @@ void lobed(int angle, int k){
     for(i=0; i < 16; i++){
         intensity = cos(((double)i * k *PIover8) - phi);
         intensity = pow(intensity, 6);
-        setGS(&gsR, i, intensity * 0xFFF);
-        setGS(&gsL, 15-i, intensity * 0xFFF);
+        setGS(&gsR, i, intensity * maxIntensity);
+        setGS(&gsL, 15-i, intensity * maxIntensity);
     }
 }
 
@@ -122,8 +122,8 @@ void lobed1(int angle){
         intensity = abs(1 + cos(((double)i * PIover8) - phi));
         intensity /= 2;
         intensity = pow(intensity, 4);
-        setGS(&gsR, i, intensity * 0xFFF);
-        setGS(&gsL, 15-i, intensity * 0xFFF);
+        setGS(&gsR, i, intensity * maxIntensity);
+        setGS(&gsL, 15-i, intensity * maxIntensity);
     }
 }
 
