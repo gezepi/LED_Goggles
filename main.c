@@ -8,6 +8,8 @@
 /*---------------------------------Variables----------------------------------*/
 GSdata gsR;
 GSdata gsL;
+unsigned int eyeL[16];
+unsigned int eyeR[16];
 int dropOff = 1;
 
 /*---------------------------------Macros-------------------------------------*/
@@ -165,8 +167,9 @@ int main(void)
     
     //allOff();
 
-    setMode(LOBED1);
+    setMode(LOBED2);
     setBPM(60);
+    setMaxI(0x7FF);
     
     init();
     int speedChange = 0;
@@ -175,11 +178,26 @@ int main(void)
         while(!newCycle);
         newCycle = 0;
         nextFrame();
-//        if(!speedChange){setBPM(60);}
-//        else if(speedChange > 768){if(speedChange & 1){incBPM(2); incMaxI(30);}}
-//        else if(speedChange > 512){if(speedChange & 1){incBPM(-2); incMaxI(-30);}}
-//        speedChange++;
-//        speedChange = speedChange & 0x3FF;//1023
+        if(!speedChange){setBPM(60);}
+        else if(speedChange > 768){if(!(speedChange & 11)){incBPM(5); incMaxI(100);}}
+        else if(speedChange > 512){if(!(speedChange & 11)){incBPM(-5); incMaxI(-100);}}
+        speedChange++;
+        speedChange = speedChange & 0x3FF;//1023
+        
+//        if(!speedChange){
+//            setMode(LOBED3);
+//        }
+//        else if(speedChange == 512){
+//            setMode(LOBED2);
+//        }
+//        else if(speedChange == 512){
+//            setMode(LOBED3);
+//            setBPM(10);
+//        }
+//        else if(speedChange == 768){
+//            setMode(LOBED4);
+//            setBPM(10);
+//        }
     }
     return 0;
 }

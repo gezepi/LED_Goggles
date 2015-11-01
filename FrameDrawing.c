@@ -7,6 +7,7 @@
 /*------------------------------------Macros----------------------------------*/
 #define abs(x)  (x<0)?-1*x:x
 #define constrain(x, l, h)  ((x)<(l))?(l):(((x)>(h))?(h):x)
+#define sign(x) ((x)<0)?-1:1
 /*---------------------------------Macro Functions----------------------------*/
 #define stopOC()    T2CONbits.TON = 0;
 #define startOC()   TMR3 = 0; T2CONbits.TON = 1;
@@ -15,7 +16,7 @@
 #define waitSPI()   wait10();wait10();wait10();Nop();Nop();Nop();
 
 /*------------------------------------Variables-------------------------------*/
-modes cur_mode = LOBED1;
+int cur_mode = LOBED1;
 int angle = 1024;
 int inc = 1;
 int maxIntensity = 0xFFF;
@@ -31,25 +32,6 @@ void __attribute__((__interrupt__,__auto_psv__)) _T3Interrupt(void)
 }
 
 /*-----------------------------------GS Functions-----------------------------*/
-void sendGSData(){
-    swapGSbytes();
-    XLAT = 0;
-    int i=0;
-    for(i=0; i<12; i++){
-        SPI1BUF = gsL.data16[i];
-        waitSPI();
-    }
-    for(i=0; i<12; i++){
-        SPI1BUF = gsR.data16[i];
-        waitSPI();
-    }
-    XLAT = 1;
-}
-
-void incGS(GSdata* gs, int chan, int inc){
-    
-}
-
 void setGS(GSdata* gs, int chan, int d){
     d = abs(d);
     d = 0x0FFF & d; //Save only the lower 12 bits
@@ -85,50 +67,62 @@ void swapGSbytes(void){
     }
 }
 
+void sendGSData(){
+    int i=0;
+    for(i=0; i<16; i++){
+        //Transfer data from normal arrays to GS arrays
+        setGS(&gsR, i, eyeR[i]);
+        setGS(&gsL, i, eyeL[i]);
+    }
+    swapGSbytes();
+    XLAT = 0;
+    for(i=0; i<12; i++){
+        SPI1BUF = gsL.data16[i];
+        waitSPI();
+    }
+    for(i=0; i<12; i++){
+        SPI1BUF = gsR.data16[i];
+        waitSPI();
+    }
+    XLAT = 1;
+}
+
+void setLED(unsigned int* eye, int l, int val){
+    eye[l] = val;
+}
+
+void incLED(unsigned int* eye, int l, int inc){
+    eye[l] = eye[l] + inc;
+}
+
 /*--------------------------------Drawing Functions---------------------------*/
 void setAll(int value){
     int i=0;
     for(i=0; i < 16; i++){
-        setGS(&gsR, i, value);
-        setGS(&gsL, i, value);
+        setLED(eyeR, i, value);
+        setLED(eyeL, 15-i, value);
     }
 }
 
 void incAll(int inc){
     int i=0;
     for(i=0; i < 16; i++){
-        incGS(&gsR, i, inc);
-        incGS(&gsL, i, inc);
+        incLED(eyeR, i, inc);
+        incLED(eyeL, i, inc);
     }
 }
 
-void lobed(int angle, int k){
+void lobed(int angle, double k){
     //angle = [0, 1024]
-    double phi = k * PHI_conv * angle;
-    int i=0;
+    double phi = PHI_conv * angle;
+    int i;
     double intensity;
     for(i=0; i < 16; i++){
-        intensity = cos(((double)i * k *PIover8) - phi);
-        intensity = pow(intensity, 6);
-        setGS(&gsR, i, intensity * maxIntensity);
-        setGS(&gsL, 15-i, intensity * maxIntensity);
+        intensity = abs(cos(k * (((double)i * PIover8) - phi)));
+        intensity = pow(intensity, 7 - (int)k);
+        setLED(eyeR, i, intensity * maxIntensity);
+        setLED(eyeL, 15-i, intensity * maxIntensity);
     }
-}
-
-void lobed4(int angle){
-    lobed(angle, 2);
-}
-
-void lobed8(int angle){
-    lobed(angle, 4);
-}
-
-void lobed3(int angle){
-    lobed(angle, 3);
-}
-
-void lobed2(int angle){
-    lobed(angle, 1);
 }
 
 void lobed1(int angle){
@@ -139,8 +133,8 @@ void lobed1(int angle){
         intensity = abs(1 + cos(((double)i * PIover8) - phi));
         intensity /= 2;
         intensity = pow(intensity, 4);
-        setGS(&gsR, i, intensity * maxIntensity);
-        setGS(&gsL, 15-i, intensity * maxIntensity);
+        setLED(eyeR, i, intensity * maxIntensity);
+        setLED(eyeL, 15-i, intensity * maxIntensity);
     }
 }
 
@@ -148,9 +142,9 @@ void randFade(){
     incAll(-1);
     int led = rand() % 0xF;
     led = constrain(led, 0, 15);
-    setGS(&gsR, (led), maxIntensity);
-    led = rand() & 0x1F;
-    setGS(&gsL, (led), maxIntensity);
+    setLED(eyeR, (led), maxIntensity);
+    led = rand() % 0xF;
+    setLED(eyeL, (led), maxIntensity);
 }
 
 void pulseAll(int a){
@@ -159,9 +153,9 @@ void pulseAll(int a){
 
 void singleRing(int a){
     int led = 15 * (a / maxFrames);
-    setAll(0);
-    setGS(&gsR, led, maxIntensity);
-    setGS(&gsL, 15-led, maxIntensity);
+    //setAll(0);
+    setLED(eyeR, led, maxIntensity);
+    setLED(eyeL, 15-led, maxIntensity);
 }
 
 /*--------------------------------Private Functions---------------------------*/
@@ -176,48 +170,33 @@ int SPI_Blocking(int d){
 
 void nextFrame(void){
     TESTpin = 1;
-    if (cur_mode == LOBED1){
+    if(cur_mode == ALL_ON){
+        setAll(maxIntensity);
+    }else if(cur_mode == LOBED1){
         lobed1(angle);
     }else if(cur_mode == LOBED2){
         lobed(angle, 1);
     }else if(cur_mode == LOBED3){
-        lobed(angle, 3);
+        lobed(angle, 1.5);
     }else if(cur_mode == LOBED4){
         lobed(angle, 2);
-    }else if(cur_mode == LOBED8){
-        lobed(angle, 4);
+    }else if(cur_mode == LOBED6){
+        lobed(angle, 3);
     }else if(cur_mode == RAND_FADE){
         randFade();
+    }else if(cur_mode == FADE){
+        incAll(-1);
     }else if(cur_mode == SINGLE_RING){
         singleRing(angle);
     }else if(cur_mode == PULSE_ALL){
         pulseAll(angle);
     }else if(cur_mode == ALL_SAME){
         setAll((angle/maxFrames) * maxIntensity);
+    }else if(cur_mode == ALL_OFF){
+        setAll(0);
     }else{
-        //nothing
+        lobed1(angle);
     }
-//    switch (cur_mode)
-//    {
-//        case LOBED1:
-//            lobed1(angle);
-//        case LOBED2:
-//            lobed(angle, 1);
-//        case LOBED3:
-//            lobed(angle, 3);
-//        case LOBED4:
-//            lobed(angle, 2);
-//        case LOBED8:
-//            lobed(angle, 4);
-//        case RAND_FADE:
-//            randFade();
-//        case SINGLE_RING:
-//            singleRing(angle);
-//        case PULSE_ALL:
-//            pulseAll(angle);
-//        default:
-//            cur_mode = cur_mode;
-//    }
     sendGSData();   //Send frame
     BLANK = 0;
     startOC();      //Start GSCLK
@@ -252,7 +231,7 @@ void incMaxI(int i){
     maxIntensity = constrain(maxIntensity, 0, 0xFFF);
 }
 
-void setMode(modes m){
+void setMode(int m){
     cur_mode = m;
 }
 

@@ -16,17 +16,19 @@
 #define FPS         70  //Figure out the PRx for this
 
 /*--------------------------------Variables-----------------------------------*/
-typedef enum {
-    LOBED1,
-    LOBED2,
-    LOBED3,
-    LOBED4,
-    LOBED8,
-    RAND_FADE,
-    SINGLE_RING,
-    PULSE_ALL,
-    ALL_SAME,
-} modes;
+#define LOBED1		1
+#define LOBED2		2
+#define LOBED3		3
+#define LOBED4		4
+#define LOBED6		5
+#define RAND_FADE	6
+#define SINGLE_RING	7
+#define PULSE_ALL	8
+#define ALL_SAME	9
+#define FADE		10
+#define ALL_ON		11
+#define ALL_OFF		12
+
 
 typedef union{
     unsigned int data16[12];
@@ -35,16 +37,17 @@ typedef union{
 
 extern GSdata gsL;
 extern GSdata gsR;
+extern unsigned int eyeL[16];
+extern unsigned int eyeR[16];
 extern int dropOff;    //How quickly the values drop from full strength
                 //  raises a value that's less than one to a power (.5^2=.25)
 
 /*-------------------------------Functions------------------------------------*/
-void swapGSbytes(void);
 void setBPM(int bpm);
 void incBPM(int bpm);
 void setMaxI(int i);
 void incMaxI(int i);
-void setMode(modes m);
+void setMode(int m);
 void init(void);
 void nextFrame(void);
 
