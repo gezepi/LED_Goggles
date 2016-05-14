@@ -11,6 +11,7 @@ GSdata gsL;
 unsigned int eyeL[16];
 unsigned int eyeR[16];
 int dropOff = 1;
+int timesIntFired = 0;
 
 /*---------------------------------Macros-------------------------------------*/
 #define newCycle    IFS0bits.T1IF
@@ -167,22 +168,43 @@ int main(void)
     
     //allOff();
 
-    setMode(LOBED2);
+    setMode(LOBED1);
     setBPM(60);
     setMaxI(0x7FF);
     
     init();
     int speedChange = 0;
+    
+    int mode = 0;
 
     while(1){
         while(!newCycle);
         newCycle = 0;
-        nextFrame();
-        if(!speedChange){setBPM(60);}
-        else if(speedChange > 768){if(!(speedChange & 11)){incBPM(5); incMaxI(100);}}
-        else if(speedChange > 512){if(!(speedChange & 11)){incBPM(-5); incMaxI(-100);}}
-        speedChange++;
-        speedChange = speedChange & 0x3FF;//1023
+        timesIntFired++;
+        
+        if(mode == 0)
+        {
+            setMode(LOBED2);
+            if(timesIntFired > 1500){
+                timesIntFired = 0;
+                mode = 1;
+            }
+            nextFrame();
+            if(!speedChange){setBPM(60);}
+            else if(speedChange > 768){if(!(speedChange & 11)){incBPM(5); incMaxI(100);}}
+            else if(speedChange > 512){if(!(speedChange & 11)){incBPM(-5); incMaxI(-50);}}
+            speedChange++;
+            speedChange = speedChange & 0x3FF;//1023
+        }else{
+            if(timesIntFired > 4500){
+                timesIntFired = 0;
+                mode = 0;
+            }
+            setMode(LOBED1);
+            setBPM(40);
+            setMaxI(0x7FF);
+            nextFrame();
+        }
         
 //        if(!speedChange){
 //            setMode(LOBED3);
