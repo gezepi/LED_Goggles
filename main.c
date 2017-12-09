@@ -1,6 +1,6 @@
 #include <p24Fxxxx.h>
 #include <xc.h>
-#include "C:\Program Files (x86)\Microchip\xc16\v1.23\support\peripheral_24F\PPS.h"
+#include "PPS.h"
 #include <math.h>
 #include "constants.h"
 #include "FrameDrawing.h"
@@ -40,6 +40,7 @@ int timesIntFired = 0;
 #pragma config JTAGEN = OFF             // JTAG Port Enable (JTAG port is disabled)
 #endif
 
+
 /*--------------------------------Functions-----------------------------------*/
 void delayms(long int ms){
     //Relatively accurate
@@ -65,9 +66,9 @@ void __attribute__((__interrupt__,__auto_psv__)) _SPI1Interrupt(void)
 
 /*------------------------------------Setup-----------------------------------*/
 void setupPins(void){
-    CLKDIVbits.RCDIV = 0; // make 16MHz
-    AD1PCFG = 0x9fff;   //All digital
-    TRISB = 0xFFFF;     //RB0-RB15 input
+    CLKDIVbits.RCDIV = 0;   // make 16MHz
+    AD1PCFG = 0x9fff;       //All digital
+    TRISB = 0xFFFF;         //RB0-RB15 input
 
     //Pin directions
     TRIS_XLAT   = 0;
@@ -190,7 +191,7 @@ int main(void)
                 mode = 1;
             }
             nextFrame();
-            if(!speedChange){setBPM(60);}
+            if(!speedChange){setBPM(30);}
             else if(speedChange > 768){if(!(speedChange & 11)){incBPM(5); incMaxI(100);}}
             else if(speedChange > 512){if(!(speedChange & 11)){incBPM(-5); incMaxI(-50);}}
             speedChange++;
@@ -201,7 +202,7 @@ int main(void)
                 mode = 0;
             }
             setMode(LOBED1);
-            setBPM(40);
+            setBPM(20);
             setMaxI(0x7FF);
             nextFrame();
         }

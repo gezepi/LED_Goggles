@@ -24,7 +24,7 @@ int maxIntensity = 0xFFF;
 /*-----------------------------------Interrupts-------------------------------*/
 void __attribute__((__interrupt__,__auto_psv__)) _T3Interrupt(void)
 {
-    //4096 pulses on GSCLK have occured
+    //4096 pulses on GSCLK have occurred
     _T3IF = 0;
     //Disable GSCLK
     stopOC();
